@@ -3,6 +3,7 @@
 // GPIO System Configuration
 static const GPIO_PinConfig_t system_pins[] = {
     {.port = GPIOC, .pin = GPIO_PIN_13, .mode = GPIO_MODE_OUTPUT_PP, .pull = GPIO_PULLUP, .speed = GPIO_SPEED_FREQ_HIGH}, // LED pin
+    {.port = GPIOA, .pin = GPIO_PIN_6, .mode = GPIO_MODE_AF_INPUT, .pull = GPIO_NOPULL, .speed = GPIO_SPEED_FREQ_HIGH},   // PWM Input pin PA6
                                                                                                                           // Add more system pins here as needed
 };
 
