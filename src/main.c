@@ -41,7 +41,7 @@ void PWM_Input_Init(void)
 
   // Configure TIM3 for PWM input mode
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 71; // 72MHz / 72 = 1MHz timer clock
+  htim3.Init.Prescaler = 8; // 8MHz / 8 = 1MHz timer clock
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -123,8 +123,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
       // Calculate frequency (1MHz timer clock / period)
       pwm_input_frequency = 1000000 / pwm_input_period;
-      printf("PWM Input - Freq: %lu Hz, Duty: %.1f%%, Period: %lu us, Pulse: %lu us\r\n",
-             pwm_input_frequency, pwm_input_duty_cycle, pwm_input_period, pwm_input_pulse_width);
     }
   }
 }
@@ -159,6 +157,8 @@ int main(void)
         PWM_SetDutyCycle(pwm_channels[i], duty_cycles[i]);
       }
     }
+    printf("PWM Input - Freq: %lu Hz, Duty: %.1f%%, Period: %lu us, Pulse: %lu us\r\n",
+           pwm_input_frequency, pwm_input_duty_cycle, pwm_input_period, pwm_input_pulse_width);
 
     HAL_Delay(100);
   }
