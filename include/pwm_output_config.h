@@ -7,21 +7,22 @@
 // PWM Configuration Structure
 typedef struct
 {
-  TIM_HandleTypeDef htim; // Timer handle
-  uint32_t channel;       // Timer channel
-  uint32_t frequency;     // PWM frequency in Hz
-  uint32_t resolution;    // PWM resolution (period)
-  uint32_t duty_cycle;    // Duty cycle (0-100)
+  TIM_HandleTypeDef htim;          // Timer handle
+  uint32_t channel;                // Timer channel
+  uint32_t frequency;              // PWM frequency in Hz
+  uint32_t resolution;             // PWM resolution (period)
+  uint32_t pulse_width_percentage; // Pulse width percentage (0-100, where 0%=1ms, 100%=2ms)
 } PWM_Config_t;
 
-// PWM Channel definitions for PA0, PA1, PA2
+// PWM Channel definitions for PA0, PA1, PA2, PA3
 #define PWM_PA0_CHANNEL TIM_CHANNEL_1
 #define PWM_PA1_CHANNEL TIM_CHANNEL_2
 #define PWM_PA2_CHANNEL TIM_CHANNEL_3
+#define PWM_PA3_CHANNEL TIM_CHANNEL_4
 
 // Function declarations
 void PWM_Init(void);
-void PWM_SetDutyCycle(uint32_t channel, uint32_t duty_cycle);
+void PWM_SetPulseWidthPercentage(uint32_t channel, uint32_t pulse_width_percentage);
 void PWM_Start(void);
 void PWM_Stop(void);
 void PWM_SetFrequency(uint32_t frequency);

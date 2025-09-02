@@ -3,23 +3,24 @@
 // Timer handle for PWM generation
 TIM_HandleTypeDef htim2;
 
-// PWM configuration for PA0, PA1, PA2
+// PWM configuration for PA0, PA1, PA2, PA3
 static const PWM_Config_t pwm_configs[] = {
-    {.channel = PWM_PA0_CHANNEL, .frequency = 50, .resolution = 1000, .duty_cycle = 50},
-    {.channel = PWM_PA1_CHANNEL, .frequency = 50, .resolution = 1000, .duty_cycle = 50},
-    {.channel = PWM_PA2_CHANNEL, .frequency = 50, .resolution = 1000, .duty_cycle = 50}};
+    {.channel = PWM_PA0_CHANNEL, .frequency = 50, .resolution = 1000, .pulse_width_percentage = 50},
+    {.channel = PWM_PA1_CHANNEL, .frequency = 50, .resolution = 1000, .pulse_width_percentage = 50},
+    {.channel = PWM_PA2_CHANNEL, .frequency = 50, .resolution = 1000, .pulse_width_percentage = 50},
+    {.channel = PWM_PA3_CHANNEL, .frequency = 50, .resolution = 1000, .pulse_width_percentage = 50}};
 
 void PWM_Init(void)
 {
   // Enable TIM2 clock
   __HAL_RCC_TIM2_CLK_ENABLE();
 
-  // Enable GPIOA clock for PA0, PA1, PA2
+  // Enable GPIOA clock for PA0, PA1, PA2, PA3
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-  // Configure PA0, PA1, PA2 as alternate function (PWM output)
+  // Configure PA0, PA1, PA2, PA3 as alternate function (PWM output)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2;
+  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -40,7 +41,9 @@ void PWM_Init(void)
   // Configure PWM channels
   TIM_OC_InitTypeDef sConfigOC = {0};
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = (pwm_configs[0].duty_cycle * pwm_configs[0].resolution) / 100;
+  // Convert pulse width percentage to compare value: 0%=1ms, 100%=2ms
+  // For 50Hz (20ms period) with 1000 resolution: 1ms = 50, 2ms = 100
+  sConfigOC.Pulse = 50 + (pwm_configs[0].pulse_width_percentage * 50) / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 
@@ -59,14 +62,21 @@ void PWM_Init(void)
   {
     // Error handling
   }
+
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, PWM_PA3_CHANNEL) != HAL_OK)
+  {
+    // Error handling
+  }
 }
 
-void PWM_SetDutyCycle(uint32_t channel, uint32_t duty_cycle)
+void PWM_SetPulseWidthPercentage(uint32_t channel, uint32_t pulse_width_percentage)
 {
-  if (duty_cycle > 100)
-    duty_cycle = 100;
+  if (pulse_width_percentage > 100)
+    pulse_width_percentage = 100;
 
-  uint32_t pulse = (duty_cycle * htim2.Init.Period) / 100;
+  // Convert pulse width percentage to compare value: 0%=1ms, 100%=2ms
+  // For 50Hz (20ms period) with 1000 resolution: 1ms = 50, 2ms = 100
+  uint32_t pulse = 50 + (pulse_width_percentage * 50) / 100;
 
   switch (channel)
   {
@@ -79,6 +89,9 @@ void PWM_SetDutyCycle(uint32_t channel, uint32_t duty_cycle)
   case PWM_PA2_CHANNEL:
     __HAL_TIM_SET_COMPARE(&htim2, PWM_PA2_CHANNEL, pulse);
     break;
+  case PWM_PA3_CHANNEL:
+    __HAL_TIM_SET_COMPARE(&htim2, PWM_PA3_CHANNEL, pulse);
+    break;
   default:
     break;
   }
@@ -89,6 +102,7 @@ void PWM_Start(void)
   HAL_TIM_PWM_Start(&htim2, PWM_PA0_CHANNEL);
   HAL_TIM_PWM_Start(&htim2, PWM_PA1_CHANNEL);
   HAL_TIM_PWM_Start(&htim2, PWM_PA2_CHANNEL);
+  HAL_TIM_PWM_Start(&htim2, PWM_PA3_CHANNEL);
 }
 
 void PWM_Stop(void)
@@ -96,6 +110,7 @@ void PWM_Stop(void)
   HAL_TIM_PWM_Stop(&htim2, PWM_PA0_CHANNEL);
   HAL_TIM_PWM_Stop(&htim2, PWM_PA1_CHANNEL);
   HAL_TIM_PWM_Stop(&htim2, PWM_PA2_CHANNEL);
+  HAL_TIM_PWM_Stop(&htim2, PWM_PA3_CHANNEL);
 }
 
 void PWM_SetFrequency(uint32_t frequency)

@@ -15,11 +15,11 @@ int main(void)
   PWM_Init();
   PWM_Input_Init(); // Initialize PWM input
 
-  // Start PWM output on all three channels
+  // Start PWM output on all four channels
   PWM_Start();
 
   // PWM output channels for LEDs
-  uint32_t pwm_channels[3] = {PWM_PA0_CHANNEL, PWM_PA1_CHANNEL, PWM_PA2_CHANNEL};
+  uint32_t pwm_channels[4] = {PWM_PA0_CHANNEL, PWM_PA1_CHANNEL, PWM_PA2_CHANNEL, PWM_PA3_CHANNEL};
 
   while (1)
   {
@@ -28,11 +28,11 @@ int main(void)
     {
       float percentage = PWM_Input_GetPercentage(i);
 
-      // Convert percentage to duty cycle (0-100)
-      uint8_t duty_cycle = (uint8_t)percentage;
+      // Convert percentage to pulse width percentage (0-100)
+      uint8_t pulse_width_percentage = (uint8_t)percentage;
 
-      // Set LED duty cycle based on PWM input
-      PWM_SetDutyCycle(pwm_channels[i], duty_cycle);
+      // Set LED pulse width percentage based on PWM input
+      PWM_SetPulseWidthPercentage(pwm_channels[i], pulse_width_percentage);
     }
 
     HAL_Delay(1); // Increased delay for better readability
