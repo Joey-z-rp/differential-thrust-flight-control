@@ -12,20 +12,19 @@
 // PWM Input Data Structure
 typedef struct
 {
-  uint32_t frequency;
-  float duty_cycle;
   uint32_t period;
   uint32_t pulse_width;
-  uint8_t valid;
 } pwm_input_data_t;
+
+// Unified PWM range for all channels (in microseconds)
+#define PWM_MIN_US 889
+#define PWM_MAX_US 1778
+
+// Dead zone percentage (3% on each end)
+#define PWM_DEAD_ZONE_PERCENT 3.0f
 
 // Function Declarations
 void PWM_Input_Init(void);
-pwm_input_data_t *PWM_Input_GetData(uint8_t channel);
-uint32_t PWM_Input_GetFrequency(uint8_t channel);
-float PWM_Input_GetDutyCycle(uint8_t channel);
-uint32_t PWM_Input_GetPeriod(uint8_t channel);
-uint32_t PWM_Input_GetPulseWidth(uint8_t channel);
-uint8_t PWM_Input_IsValid(uint8_t channel);
+float PWM_Input_GetPercentage(uint8_t channel);
 
 #endif // PWM_INPUT_CONFIG_H

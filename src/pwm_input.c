@@ -170,62 +170,30 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
   {
     // Read the pulse width (high time)
     pwm_inputs[channel].pulse_width = HAL_TIM_ReadCapturedValue(htim, duty_channel);
-
-    // Calculate duty cycle percentage
-    pwm_inputs[channel].duty_cycle = (float)pwm_inputs[channel].pulse_width * 100.0f / (float)pwm_inputs[channel].period;
-
-    // Calculate frequency (1MHz timer clock / period)
-    pwm_inputs[channel].frequency = 1000000 / pwm_inputs[channel].period;
-
-    // Mark as valid
-    pwm_inputs[channel].valid = 1;
   }
 }
 
-// Get PWM input data for a specific channel
-pwm_input_data_t *PWM_Input_GetData(uint8_t channel)
+float PWM_Input_GetPercentage(uint8_t channel)
 {
   if (channel >= PWM_INPUT_CHANNEL_COUNT)
-    return NULL;
-  return &pwm_inputs[channel];
-}
-
-// Get PWM input frequency for a specific channel
-uint32_t PWM_Input_GetFrequency(uint8_t channel)
-{
-  if (channel >= PWM_INPUT_CHANNEL_COUNT || !pwm_inputs[channel].valid)
-    return 0;
-  return pwm_inputs[channel].frequency;
-}
-
-// Get PWM input duty cycle for a specific channel
-float PWM_Input_GetDutyCycle(uint8_t channel)
-{
-  if (channel >= PWM_INPUT_CHANNEL_COUNT || !pwm_inputs[channel].valid)
     return 0.0f;
-  return pwm_inputs[channel].duty_cycle;
-}
 
-// Get PWM input period for a specific channel
-uint32_t PWM_Input_GetPeriod(uint8_t channel)
-{
-  if (channel >= PWM_INPUT_CHANNEL_COUNT || !pwm_inputs[channel].valid)
-    return 0;
-  return pwm_inputs[channel].period;
-}
+  uint32_t pulse_width = pwm_inputs[channel].pulse_width;
 
-// Get PWM input pulse width for a specific channel
-uint32_t PWM_Input_GetPulseWidth(uint8_t channel)
-{
-  if (channel >= PWM_INPUT_CHANNEL_COUNT || !pwm_inputs[channel].valid)
-    return 0;
-  return pwm_inputs[channel].pulse_width;
-}
+  // Calculate dead zone boundaries using unified range
+  uint32_t range = PWM_MAX_US - PWM_MIN_US;
+  uint32_t dead_zone = (uint32_t)(range * PWM_DEAD_ZONE_PERCENT / 100.0f);
+  uint32_t effective_min = PWM_MIN_US + dead_zone;
+  uint32_t effective_max = PWM_MAX_US - dead_zone;
 
-// Check if PWM input data is valid for a specific channel
-uint8_t PWM_Input_IsValid(uint8_t channel)
-{
-  if (channel >= PWM_INPUT_CHANNEL_COUNT)
-    return 0;
-  return pwm_inputs[channel].valid;
+  // Clamp pulse width to effective range
+  if (pulse_width <= effective_min)
+    return 0.0f;
+  if (pulse_width >= effective_max)
+    return 100.0f;
+
+  // Calculate percentage within effective range
+  float percentage = ((float)(pulse_width - effective_min) / (float)(effective_max - effective_min)) * 100.0f;
+
+  return percentage;
 }

@@ -2,34 +2,10 @@
 #include "gpio_config.h"
 #include "pwm_output_config.h"
 #include "pwm_input_config.h"
-#include <stdio.h>
 
 // External timer handles from pwm_input.c
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim4;
-
-// Helper function to cycle PWM duty cycle
-void cycle_pwm_duty(uint8_t *duty, uint8_t *direction, uint8_t min_val, uint8_t max_val)
-{
-  if (*direction == 0)
-  {
-    (*duty)++;
-    if (*duty >= max_val)
-    {
-      *duty = max_val;
-      *direction = 1;
-    }
-  }
-  else
-  {
-    (*duty)--;
-    if (*duty <= min_val)
-    {
-      *duty = min_val;
-      *direction = 0;
-    }
-  }
-}
 
 int main(void)
 {
@@ -42,44 +18,24 @@ int main(void)
   // Start PWM output on all three channels
   PWM_Start();
 
-  // PWM configuration arrays
-  uint8_t duty_cycles[3] = {0, 0, 0};  // Current duty cycles
-  uint8_t directions[3] = {0, 0, 0};   // Direction flags (0=increasing, 1=decreasing)
-  uint8_t update_rates[3] = {1, 2, 3}; // Update rates (every N iterations)
-  uint8_t counters[3] = {0, 0, 0};     // Counters for update timing
+  // PWM output channels for LEDs
   uint32_t pwm_channels[3] = {PWM_PA0_CHANNEL, PWM_PA1_CHANNEL, PWM_PA2_CHANNEL};
 
   while (1)
   {
-    // Update PWM duty cycles for all channels
-    for (int i = 0; i < 3; i++)
-    {
-      if (++counters[i] >= update_rates[i])
-      {
-        counters[i] = 0;
-        cycle_pwm_duty(&duty_cycles[i], &directions[i], 0, 100);
-        PWM_SetDutyCycle(pwm_channels[i], duty_cycles[i]);
-      }
-    }
-    // Display PWM input data for all 3 channels
+    // Use PWM input percentages to control LED duty cycles
     for (int i = 0; i < PWM_INPUT_CHANNEL_COUNT; i++)
     {
-      if (PWM_Input_IsValid(i))
-      {
-        volatile float duty_cycle = PWM_Input_GetDutyCycle(i);
-        volatile float frequency = PWM_Input_GetFrequency(i);
-        volatile float period = PWM_Input_GetPeriod(i);
-        volatile float pulse_width = PWM_Input_GetPulseWidth(i);
-        printf("PWM Ch%d - Freq: %lu Hz, Duty: %.1f%%, Period: %lu us, Pulse: %lu us\r\n",
-               i, frequency, duty_cycle, period, pulse_width);
-      }
-      else
-      {
-        printf("PWM Ch%d - No signal detected\r\n", i);
-      }
+      float percentage = PWM_Input_GetPercentage(i);
+
+      // Convert percentage to duty cycle (0-100)
+      uint8_t duty_cycle = (uint8_t)percentage;
+
+      // Set LED duty cycle based on PWM input
+      PWM_SetDutyCycle(pwm_channels[i], duty_cycle);
     }
 
-    HAL_Delay(100);
+    HAL_Delay(1); // Increased delay for better readability
   }
 }
 
