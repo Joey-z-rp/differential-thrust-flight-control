@@ -19,7 +19,7 @@
 // Flight control configuration
 #define MAX_THROTTLE_PERCENT 80.0f // Maximum throttle percentage (safety limit)
 #define MIN_THROTTLE_PERCENT 0.0f  // Minimum throttle percentage
-#define CONTROL_SENSITIVITY 0.2f   // Control sensitivity multiplier (0.0-1.0)
+#define CONTROL_SENSITIVITY 0.4f   // Control sensitivity multiplier (0.0-1.0)
 #define MOTOR_DEADBAND 3.0f        // Minimum motor output percentage
 
 // Flight control data structure

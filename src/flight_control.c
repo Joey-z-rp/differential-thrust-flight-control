@@ -53,9 +53,13 @@ static void FlightControl_CalculateMotorOutputs(const flight_control_inputs_t *i
   if (inputs == NULL || outputs == NULL)
     return;
 
-  // Apply control sensitivity to roll and pitch
-  float roll_control = inputs->roll * control_sensitivity;
-  float pitch_control = inputs->pitch * control_sensitivity;
+  // Apply control sensitivity to roll and pitch, scaled by throttle
+  // At low throttle, control inputs have less effect to prevent over-control
+  float throttle_scale = inputs->throttle / 100.0f; // Scale 0-100% to 0-1.0
+  float scaled_sensitivity = control_sensitivity * throttle_scale;
+
+  float roll_control = inputs->roll * scaled_sensitivity;
+  float pitch_control = inputs->pitch * scaled_sensitivity;
 
   // Calculate base motor outputs with differential thrust
   // For left outer, left inner, right inner, right outer layout:
