@@ -121,6 +121,14 @@ static void PWM_Input_Timer_Init(const pwm_timer_config_t *config)
 // Main PWM Input Initialization Function
 void PWM_Input_Init(void)
 {
+  // Initialize all PWM input data structures
+  for (uint8_t i = 0; i < PWM_INPUT_CHANNEL_COUNT; i++)
+  {
+    pwm_inputs[i].period = 0;
+    pwm_inputs[i].pulse_width = 0;
+    pwm_inputs[i].last_update_time = HAL_GetTick();
+  }
+
   // Initialize all PWM input timers using configuration table
   for (uint8_t i = 0; i < sizeof(timer_configs) / sizeof(timer_configs[0]); i++)
   {
@@ -171,6 +179,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     // Read the pulse width (high time)
     pwm_inputs[channel].pulse_width = HAL_TIM_ReadCapturedValue(htim, duty_channel);
   }
+
+  // Update timestamp for this channel
+  pwm_inputs[channel].last_update_time = HAL_GetTick();
 }
 
 float PWM_Input_GetPercentage(uint8_t channel)
@@ -196,4 +207,27 @@ float PWM_Input_GetPercentage(uint8_t channel)
   float percentage = ((float)(pulse_width - effective_min) / (float)(effective_max - effective_min)) * 100.0f;
 
   return percentage;
+}
+
+// Check if a specific PWM channel has been lost
+uint8_t PWM_Input_IsChannelLost(uint8_t channel, uint32_t timeout_ms)
+{
+  if (channel >= PWM_INPUT_CHANNEL_COUNT)
+    return 1; // Invalid channel is considered lost
+
+  uint32_t current_time = HAL_GetTick();
+  return (current_time - pwm_inputs[channel].last_update_time) > timeout_ms;
+}
+
+// Check if any PWM channel has been lost
+uint8_t PWM_Input_IsAnyChannelLost(uint32_t timeout_ms)
+{
+  for (uint8_t i = 0; i < PWM_INPUT_CHANNEL_COUNT; i++)
+  {
+    if (PWM_Input_IsChannelLost(i, timeout_ms))
+    {
+      return 1; // At least one channel is lost
+    }
+  }
+  return 0; // All channels are active
 }

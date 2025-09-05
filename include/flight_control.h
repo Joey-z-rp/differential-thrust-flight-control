@@ -22,6 +22,9 @@
 #define CONTROL_SENSITIVITY 0.4f   // Control sensitivity multiplier (0.0-1.0)
 #define MOTOR_DEADBAND 3.0f        // Minimum motor output percentage
 
+// Safety configuration
+#define PWM_LOSS_TIMEOUT_MS 2000 // Timeout in milliseconds to detect PWM loss
+
 // Flight control data structure
 typedef struct
 {
@@ -40,9 +43,16 @@ typedef struct
   float right_outer; // Right outer motor output (0-100%)
 } motor_outputs_t;
 
+// Safety state structure
+typedef struct
+{
+  uint8_t pwm_loss_detected; // Flag indicating PWM loss detected
+} safety_state_t;
+
 // Function declarations
 void FlightControl_Init(void);
 void FlightControl_Update(void);
 void FlightControl_GetInputs(flight_control_inputs_t *inputs);
+void FlightControl_StopAllMotors(void);
 
 #endif // FLIGHT_CONTROL_H

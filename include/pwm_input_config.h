@@ -14,6 +14,7 @@ typedef struct
 {
   uint32_t period;
   uint32_t pulse_width;
+  uint32_t last_update_time; // Timestamp of last interrupt for this channel
 } pwm_input_data_t;
 
 // Unified PWM range for all channels (in microseconds)
@@ -26,5 +27,7 @@ typedef struct
 // Function Declarations
 void PWM_Input_Init(void);
 float PWM_Input_GetPercentage(uint8_t channel);
+uint8_t PWM_Input_IsChannelLost(uint8_t channel, uint32_t timeout_ms);
+uint8_t PWM_Input_IsAnyChannelLost(uint32_t timeout_ms);
 
 #endif // PWM_INPUT_CONFIG_H

@@ -7,12 +7,14 @@ static float max_throttle = MAX_THROTTLE_PERCENT;
 // Current flight control state
 static flight_control_inputs_t current_inputs = {0};
 static motor_outputs_t current_outputs = {0};
+static safety_state_t safety_state = {0};
 
 // Forward declarations for static functions
 static void FlightControl_CalculateMotorOutputs(const flight_control_inputs_t *inputs, motor_outputs_t *outputs);
 static void FlightControl_ApplyMotorOutputs(const motor_outputs_t *outputs);
 static float FlightControl_Clamp(float value, float min_val, float max_val);
 static float FlightControl_ApplyDeadband(float value, float deadband);
+static void FlightControl_CheckPwmLoss(void);
 
 // Clamp value between min and max
 static float FlightControl_Clamp(float value, float min_val, float max_val)
@@ -100,6 +102,9 @@ void FlightControl_Init(void)
   current_outputs.right_inner = 0.0f;
   current_outputs.right_outer = 0.0f;
 
+  // Initialize safety state
+  safety_state.pwm_loss_detected = 0;
+
   // Set initial motor outputs to minimum
   FlightControl_ApplyMotorOutputs(&current_outputs);
 }
@@ -107,6 +112,15 @@ void FlightControl_Init(void)
 // Update flight control - call this in main loop
 void FlightControl_Update(void)
 {
+  // Check for PWM input loss first (safety check)
+  FlightControl_CheckPwmLoss();
+
+  // If PWM loss detected, don't process inputs or update motors
+  if (safety_state.pwm_loss_detected)
+  {
+    return; // Motors are already stopped by safety system
+  }
+
   // Read PWM inputs and convert to flight control inputs
   FlightControl_GetInputs(&current_inputs);
 
@@ -139,4 +153,37 @@ void FlightControl_GetInputs(flight_control_inputs_t *inputs)
 
   // Yaw is not currently implemented (no 4th input channel)
   inputs->yaw = 0.0f;
+}
+
+// Check for PWM input loss and stop motors if detected
+static void FlightControl_CheckPwmLoss(void)
+{
+  // Check if any PWM channel has been lost
+  if (PWM_Input_IsAnyChannelLost(PWM_LOSS_TIMEOUT_MS))
+  {
+    if (!safety_state.pwm_loss_detected)
+    {
+      // PWM loss just detected - stop all motors immediately
+      safety_state.pwm_loss_detected = 1;
+      FlightControl_StopAllMotors();
+    }
+  }
+  else
+  {
+    // PWM inputs are active - reset loss detection flag
+    if (safety_state.pwm_loss_detected)
+    {
+      safety_state.pwm_loss_detected = 0;
+    }
+  }
+}
+
+// Stop all motors immediately (safety function)
+void FlightControl_StopAllMotors(void)
+{
+  // Set all motor outputs to zero
+  PWM_SetPulseWidthPercentage(MOTOR_LEFT_OUTER, 0);
+  PWM_SetPulseWidthPercentage(MOTOR_LEFT_INNER, 0);
+  PWM_SetPulseWidthPercentage(MOTOR_RIGHT_INNER, 0);
+  PWM_SetPulseWidthPercentage(MOTOR_RIGHT_OUTER, 0);
 }
