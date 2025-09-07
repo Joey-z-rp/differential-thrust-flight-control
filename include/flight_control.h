@@ -17,10 +17,10 @@
 #define MOTOR_RIGHT_OUTER PWM_PA3_CHANNEL // PA3 - Right Outer Motor
 
 // Flight control configuration
-#define MAX_THROTTLE_PERCENT 80.0f // Maximum throttle percentage (safety limit)
-#define MIN_THROTTLE_PERCENT 0.0f  // Minimum throttle percentage
-#define CONTROL_SENSITIVITY 0.4f   // Control sensitivity multiplier (0.0-1.0)
-#define MOTOR_DEADBAND 3.0f        // Minimum motor output percentage
+#define MAX_THROTTLE_PERCENT 100.0f // Maximum throttle percentage (safety limit)
+#define MIN_THROTTLE_PERCENT 0.0f   // Minimum throttle percentage
+#define CONTROL_SENSITIVITY 0.4f    // Control sensitivity multiplier (0.0-1.0)
+#define MOTOR_DEADBAND 3.0f         // Minimum motor output percentage
 
 // Safety configuration
 #define PWM_LOSS_TIMEOUT_MS 2000 // Timeout in milliseconds to detect PWM loss
